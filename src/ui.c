@@ -189,7 +189,26 @@ void setOccupancy(void)
  */
 void setTemperature(void)
 {
-    printf("  TODO setTemperature\n");
+    uint8_t i = pickRoom();
+    if (i == 255U) {
+        return; // Invalid room index, exit the function
+    }
+
+    int adcValue;
+    printf("  Raw ADC reading (0..%d): ", ADC_MAX);
+    if (!readInt(&adcValue) || adcValue < 0 || adcValue > ADC_MAX) {
+        statusSet(C_ALARM, "Invalid ADC reading. Must be between 0 and %d.", ADC_MAX);
+        return; // Invalid input, exit the function
+    }
+
+    Room_t *room = houseRoom(i);
+    room->adc = (uint16_t)adcValue; // Store the valid ADC value
+
+    uint16_t temperatureC = tempC(room->adc); // Convert to Celsius
+    statusSet(C_OK, "%s: ADC %u -> %u C", room->name, room->adc, temperatureC);
+
+    render((int)i); // Redraw the room with updated temperature
+    pauseKey();     // Wait for user to press Enter
 }
 
 
