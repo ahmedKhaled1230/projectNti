@@ -214,7 +214,11 @@ uint8_t applyRules(Room_t *r)
  */
 uint8_t rulesPass(void)
 {
-    return 0U;      /* TODO */
+         uint8_t changed = 0U;
+    for (uint8_t i = 0; i < ROOM_COUNT; i++) {
+        changed += applyRules(&house[i]);
+    }
+    return changed;
 }
 
 
