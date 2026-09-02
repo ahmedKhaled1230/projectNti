@@ -245,7 +245,44 @@ void setTemperature(void)
  */
 void switchDevice(void)
 {
-    printf("  TODO switchDevice\n");
+    uint8_t i = pickRoom();
+    if (i == 255U) {
+        return; // Invalid room index, exit the function
+    }
+
+    int choice;
+    printf("  Switch (1=Lamp 2=Fan 3=Auto mode): ");
+    if (!readInt(&choice)) {
+        statusSet(C_ALARM, "Invalid input. Please enter a number.");
+        return; // Invalid input, exit the function
+    }
+
+    Room_t *room = houseRoom(i);
+    switch (choice) {
+        case 1:
+            TOGGLE_BIT(room->status, BIT_LAMP);
+            CLR_BIT(room->status, BIT_AUTO);
+            statusSet(C_OK, "%s: Lamp toggled.", room->name);
+            break;
+        case 2:
+            TOGGLE_BIT(room->status, BIT_FAN);
+            CLR_BIT(room->status, BIT_AUTO);
+            statusSet(C_OK, "%s: Fan toggled.", room->name);
+            break;
+        case 3:
+            TOGGLE_BIT(room->status, BIT_AUTO);
+            statusSet(C_OK, "%s: Auto mode toggled.", room->name);
+            break;
+        default:
+            statusSet(C_ALARM, "Nothing switched.");
+            return; // Invalid choice, exit the function
+    }
+
+    render((int)i); // Redraw the room with updated status
+    printf("  %s status = ", room->name);
+    printBinary(room->status);
+    printf("  (0x%02X)\n", room->status);
+    pauseKey();     // Wait for user to press Enter
 }
 
 
