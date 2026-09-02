@@ -316,7 +316,48 @@ void switchDevice(void)
  */
 void houseReport(void)
 {
-    printf("  TODO houseReport\n");
+    render(-1); // Redraw the schematic without highlighting any room
+
+    // Counters and bars
+    uint8_t lampsOn = countRoomsWith(BIT_LAMP);
+    drawBar(lampsOn, ROOM_COUNT, REPORT_BAR_W, C_LAMP);
+    printf("  Lamps ON: %u/%u\n", lampsOn, ROOM_COUNT);
+
+    uint8_t fansOn = countRoomsWith(BIT_FAN);
+    drawBar(fansOn, ROOM_COUNT, REPORT_BAR_W, C_FAN);
+    printf("  Fans ON: %u/%u\n", fansOn, ROOM_COUNT);
+
+    uint8_t occupied = countRoomsWith(BIT_OCCUPIED);
+    drawBar(occupied, ROOM_COUNT, REPORT_BAR_W, C_OK);
+    printf("  Occupied: %u/%u\n", occupied, ROOM_COUNT);
+
+    uint8_t alarms = countRoomsWith(BIT_ALARM);
+    drawBar(alarms, ROOM_COUNT, REPORT_BAR_W, C_ALARM);
+    printf("  Alarms: %u/%u\n", alarms, ROOM_COUNT);
+
+    // Hottest and coldest room
+    const Room_t *rooms = houseRooms();
+    const Room_t *hottestRoom = &rooms[0];
+    const Room_t *coldestRoom = &rooms[0];
+
+    for (uint8_t i = 1; i < ROOM_COUNT; i++) {
+        if (rooms[i].adc > hottestRoom->adc) {
+            hottestRoom = &rooms[i];
+        }
+        if (rooms[i].adc < coldestRoom->adc) {
+            coldestRoom = &rooms[i];
+        }
+    }
+
+    printf("  Hottest room: %s (%u C)\n", hottestRoom->name, tempC(hottestRoom->adc));
+    printf("  Coldest room: %s (%u C)\n", coldestRoom->name, tempC(coldestRoom->adc));
+
+    // Average temperature
+    uint32_t totalAdc = sumAdc(rooms, ROOM_COUNT);
+    uint16_t averageTempC = tempC(totalAdc / ROOM_COUNT);
+    printf("  Average temperature: %u C\n", averageTempC);
+
+    pauseKey(); // Wait for user to press Enter
 }
 
 
