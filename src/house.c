@@ -271,6 +271,8 @@ uint8_t countRoomsWith(uint8_t bit)
  */
 uint32_t sumAdc(const Room_t *rooms, uint8_t n)
 {
-    (void)rooms; (void)n;   /* delete this line */
-    return 0UL;             /* TODO */
+    if (n == 0U) {
+        return 0UL;   // base case
+    }
+    return rooms[n - 1].adc + sumAdc(rooms, n - 1);
 }
