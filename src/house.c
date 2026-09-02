@@ -166,9 +166,31 @@ uint16_t tempC(uint16_t adc)
  */
 uint8_t applyRules(Room_t *r)
 {
-    (void)r;        /* delete this line */
-    return 0U;      /* TODO */
-}
+   uint8_t oldStatus=r->status; //save old status for comparison at end 
+   if (!READ_BIT(r->status, BIT_AUTO)) return 0U; //if auto bit is clear return 0
+   if(READ_BIT(r->status, BIT_OCCUPIED)) {
+        SET_BIT(r->status, BIT_LAMP); //if occupied set lamp bit
+    } else {
+        CLR_BIT(r->status, BIT_LAMP); //if not occupied clear lamp bit
+    }
+
+    if(tempC(r->adc) >= TEMP_HOT) {
+        SET_BIT(r->status, BIT_FAN); //if temp >= TEMP_HOT set fan bit
+    } else {
+        CLR_BIT(r->status, BIT_FAN); //if temp < TEMP_HOT clear fan bit
+    }
+    
+    if(tempC(r->adc) >= TEMP_ALARM) {
+        SET_BIT(r->status, BIT_ALARM); //if temp >= TEMP_ALARM set alarm bit
+        SET_BIT(r->status, BIT_LAMP); //also set lamp bit
+    } else {
+        CLR_BIT(r->status, BIT_ALARM); //if temp < TEMP_ALARM clear alarm bit
+    }
+    
+    return (r->status != oldStatus) ? 1U : 0U; //return 1 if status changed, else 0
+   }
+
+
 
 
 /* ==========================================================================
