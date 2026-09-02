@@ -26,9 +26,10 @@
  *   - Nothing in this file prints anything. Printing is render.c's job.
  *
  * Smart Home Console · Day 03 midterm — G9
- * Student: <YOUR NAME HERE>
+ * Student: <Ahmed Khaled Mohamed Youssri Khaled Elbohy>
  */
 #include "house.h"
+#include <string.h>     
 
 /* ---------------- module-private data (NFR-03) ---------------
  * GIVEN. The array is static, so nothing outside this file can reach it.
@@ -79,7 +80,17 @@ void houseInit(void)
     static const uint8_t  SEED_OCC[ROOM_COUNT] = { 1U, 0U, 0U, 0U, 1U, 0U };
 
     /* TODO: the loop described above. */
-    (void)NAMES; (void)SEED_ADC; (void)SEED_OCC;   /* delete these */
+    for (uint8_t i = 0U; i < ROOM_COUNT; i++) {
+        
+       strncpy(house[i].name, NAMES[i], NAME_LEN - 1U);
+        house[i].name[NAME_LEN - 1] = '\0';  
+        house[i].adc = SEED_ADC[i];
+        house[i].status = 0U;
+        SET_BIT(house[i].status, BIT_AUTO);
+        if (SEED_OCC[i]) {
+            SET_BIT(house[i].status, BIT_OCCUPIED);
+        }
+    }
 }
 
 
@@ -107,10 +118,12 @@ void houseInit(void)
  *
  * If you get 0 for everything, you divided before you multiplied.
  */
+
 uint16_t tempC(uint16_t adc)
 {
-    (void)adc;      /* delete this line */
-    return 0U;      /* TODO */
+    uint32_t temp = (uint32_t)adc *500U / 1024U;
+    return (uint16_t)temp;      /* TODO */
+
 }
 
 
