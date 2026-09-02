@@ -142,7 +142,23 @@ uint8_t pickRoom(void)
  */
 void setOccupancy(void)
 {
-    printf("  TODO setOccupancy\n");
+    uint8_t i = pickRoom();
+    if (i == 255U) {
+        return; // Invalid room index, exit the function
+    }
+
+    Room_t *room = houseRoom(i);
+    TOGGLE_BIT(room->status, BIT_OCCUPIED); // Toggle the occupancy bit
+
+    // Set a status message indicating the new occupancy state
+    if (READ_BIT(room->status, BIT_OCCUPIED)) {
+        statusSet(C_OK, "%s: Occupied", room->name);
+    } else {
+        statusSet(C_OK, "%s: Vacant", room->name);
+    }
+
+    render((int)i); // Redraw the room with updated status
+    pauseKey();     // Wait for user to press Enter
 }
 
 
