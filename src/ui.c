@@ -196,7 +196,7 @@ void setTemperature(void)
 
     int adcValue;
     printf("  Raw ADC reading (0..%d): ", ADC_MAX);
-    if (!readInt(&adcValue) || adcValue < 0 || adcValue > ADC_MAX) {
+    if (!readInt(&adcValue) || adcValue < 0 || adcValue > (int)ADC_MAX) {
         statusSet(C_ALARM, "Invalid ADC reading. Must be between 0 and %d.", ADC_MAX);
         return; // Invalid input, exit the function
     }
@@ -396,5 +396,39 @@ void houseReport(void)
  */
 void runAutomation(void)
 {
-    printf("  TODO runAutomation\n");
+    char trace[ROOM_COUNT][96];
+    uint8_t changed = 0U;
+
+    for (uint8_t i = 0U; i < ROOM_COUNT; i++) {
+        Room_t *room = houseRoom(i);
+        uint8_t beforeStatus = room->status;
+
+        if (!READ_BIT(room->status, BIT_AUTO)) {
+            snprintf(trace[i], sizeof(trace[i]), "%s  %u C   skipped (MANUAL)",
+                     room->name, tempC(room->adc));
+        } else {
+            char beforeBinary[9];
+            char afterBinary[9];
+
+            changed += applyRules(room);
+            for (uint8_t bit = 0U; bit < 8U; bit++) {
+                beforeBinary[7U - bit] = READ_BIT(beforeStatus, bit) ? '1' : '0';
+                afterBinary[7U - bit] = READ_BIT(room->status, bit) ? '1' : '0';
+            }
+            beforeBinary[8] = '\0';
+            afterBinary[8] = '\0';
+            snprintf(trace[i], sizeof(trace[i]), "%s  %u C   0b%s -> 0b%s%s",
+                     room->name, tempC(room->adc), beforeBinary, afterBinary,
+                     (beforeStatus != room->status) ? "  *" : "");
+        }
+    }
+
+    render(-1); // Redraw the schematic without highlighting any room
+
+    for (uint8_t i = 0U; i < ROOM_COUNT; i++) {
+        printf("%s\n", trace[i]);
+    }
+
+    printf("%u room(s) changed.\n", changed);
+    pauseKey(); // Wait for user to press Enter
 }
